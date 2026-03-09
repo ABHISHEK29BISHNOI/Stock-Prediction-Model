@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Stock Prediction</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<h1>Stock Price Prediction</h1>
+
+<form method="POST">
+
+<input type="text" name="ticker" placeholder="Enter Stock Symbol (AAPL, TSLA, MSFT)" required>
+
+<button type="submit">Predict</button>
+
+</form>
+
+<div class="box">
+
+<p>Predicted Next Day Price:</p>
+
+<h2>$ {{price}}</h2>
+
+</div>
+
+<h2>Stock Data</h2>
+
+{{table | safe}}
+
+<h2>Stock Graph</h2>
+
+<img src="data:image/png;base64,{{graph}}"/>
+
+</body>
+</html>

@@ -16,33 +16,47 @@ app = Flask(__name__)
 def home():
 
     ticker = "AAPL"
+    selected_date = None
 
     if request.method == "POST":
         ticker = request.form["ticker"]
+        selected_date = request.form.get("date")
 
-    # download latest data
+   
     data = yf.download(ticker, period="1y")
 
     data = data[['Open','High','Low','Close','Volume']]
 
-    # create prediction column
     data['Prediction'] = data['Close'].shift(-1)
 
     X = np.array(data.drop(['Prediction'], axis=1))[:-1]
     y = np.array(data['Prediction'])[:-1]
 
-    # train model
+    
     model = LinearRegression()
     model.fit(X,y)
 
-    # latest row
-    last_row = data[['Open','High','Low','Close','Volume']].iloc[-1]
+  
 
-    prediction = model.predict([last_row])
+    if selected_date:
 
-    price = round(prediction[0],2)
+        selected_date = pd.to_datetime(selected_date)
 
-    # -------- GRAPH -------- #
+        
+        closest_index = data.index.get_indexer([selected_date], method="nearest")[0]
+        closest_date = data.index[closest_index]
+
+        row = data.loc[closest_date][['Open','High','Low','Close','Volume']]
+
+    else:
+
+        row = data[['Open','High','Low','Close','Volume']].iloc[-1]
+
+   
+    prediction = model.predict([row])[0]
+
+    price = round(prediction,2)
+
 
     plt.figure(figsize=(10,5))
 
@@ -64,10 +78,15 @@ def home():
 
     graph_url = base64.b64encode(img.getvalue()).decode()
 
-    # table
+   
     table = data.tail().to_html(classes='table')
 
-    return render_template("index.html", price=price, graph=graph_url, table=table)
+    return render_template(
+        "index.html",
+        price=price,
+        graph=graph_url,
+        table=table
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)
